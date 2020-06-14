@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace MoviesApi.Controllers
 {
     [Route("api/genres")]
+    [ApiController]
     public class GenresController : ControllerBase
     {
         private readonly IRepository _repository;
