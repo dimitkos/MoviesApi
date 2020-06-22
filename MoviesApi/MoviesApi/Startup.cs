@@ -28,45 +28,35 @@ namespace MoviesApi
             {
                 options.Filters.Add(typeof(ExceptionFilter)); //apply global a filter
             }).AddXmlDataContractSerializerFormatters();
-            services.AddResponseCaching();
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+            //services.AddResponseCaching();
             services.AddTransient<LoggingActionFilter>();
             services.AddSingleton<IRepository, InMemoryRepository>();
-            services.AddTransient<IHostedService, WriteToFileHostedService>();
+            //services.AddTransient<IHostedService, WriteToFileHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 
-            app.Use(async (context, next) =>
-            {
-                using (var swapStream = new MemoryStream())
-                {
-                    var originalResponseBody = context.Response.Body;
-                    context.Response.Body = swapStream;
+            //app.Use(async (context, next) =>
+            //{
+            //    using (var swapStream = new MemoryStream())
+            //    {
+            //        var originalResponseBody = context.Response.Body;
+            //        context.Response.Body = swapStream;
 
-                    await next.Invoke();
+            //        await next.Invoke();
 
-                    swapStream.Seek(0, SeekOrigin.Begin);
-                    string responseBody = new StreamReader(swapStream).ReadToEnd();
-                    swapStream.Seek(0, SeekOrigin.Begin);
+            //        swapStream.Seek(0, SeekOrigin.Begin);
+            //        string responseBody = new StreamReader(swapStream).ReadToEnd();
+            //        swapStream.Seek(0, SeekOrigin.Begin);
 
-                    await swapStream.CopyToAsync(originalResponseBody);
-                    context.Response.Body = originalResponseBody;
+            //        await swapStream.CopyToAsync(originalResponseBody);
+            //        context.Response.Body = originalResponseBody;
 
-                    logger.LogInformation(responseBody);
-                }
-            });
-
-            //if i would like to do a specific action when i call an endpoint
-            app.Map("/map1", (app) =>
-            {
-                app.Run(async context =>
-                {
-                    await context.Response.WriteAsync("I'm short-circuiting the pipeline");
-                });
-            });
+            //        logger.LogInformation(responseBody);
+            //    }
+            //});
 
 
             if (env.IsDevelopment())
@@ -78,7 +68,7 @@ namespace MoviesApi
 
             app.UseRouting();
 
-            app.UseResponseCaching();
+            //app.UseResponseCaching();
 
             app.UseAuthentication();
 
