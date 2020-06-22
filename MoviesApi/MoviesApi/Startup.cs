@@ -23,6 +23,7 @@ namespace MoviesApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddResponseCaching();
             services.AddSingleton<IRepository, InMemoryRepository>();
         }
 
@@ -68,6 +69,8 @@ namespace MoviesApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseResponseCaching();
 
             app.UseAuthorization();
 

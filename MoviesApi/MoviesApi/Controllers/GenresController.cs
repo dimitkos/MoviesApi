@@ -21,6 +21,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(Duration = 60)]
         public async Task<ActionResult<List<Genre>>> Get()
         {
             _logger.LogInformation("Getting all genres");
