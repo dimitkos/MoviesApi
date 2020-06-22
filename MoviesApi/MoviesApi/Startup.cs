@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MoviesApi.Filters;
 using MoviesApi.Services;
 using System.IO;
 
@@ -22,8 +24,13 @@ namespace MoviesApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers(options => 
+            {
+                options.Filters.Add(typeof(ExceptionFilter)); //apply global a filter
+            }).AddXmlDataContractSerializerFormatters();
             services.AddResponseCaching();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+            services.AddTransient<LoggingActionFilter>();
             services.AddSingleton<IRepository, InMemoryRepository>();
         }
 
@@ -71,6 +78,8 @@ namespace MoviesApi
             app.UseRouting();
 
             app.UseResponseCaching();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
