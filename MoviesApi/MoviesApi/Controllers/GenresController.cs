@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MoviesApi.Entities;
 using MoviesApi.Filters;
-using MoviesApi.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,13 +12,13 @@ namespace MoviesApi.Controllers
     [ApiController]
     public class GenresController : ControllerBase
     {
-        private readonly IRepository _repository;
         private readonly ILogger<GenresController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public GenresController(IRepository repository, ILogger<GenresController> logger)
+        public GenresController(ILogger<GenresController> logger, ApplicationDbContext context)
         {
-            _repository = repository;
             _logger = logger;
+            _context = context;
         }
 
         [HttpGet]
@@ -28,17 +26,17 @@ namespace MoviesApi.Controllers
         //[ResponseCache(Duration = 60)]
         public async Task<ActionResult<List<Genre>>> Get()
         {
-            var genres = await _repository.GetAllGenres();
+            var genres = await _context.Genres.AsNoTracking().ToListAsync();
 
             return Ok(genres);
         }
 
-        [HttpGet("{Id:int}",Name = "getGenre")]
-        public ActionResult<Genre> Get(int Id)
+        [HttpGet("{Id:int}", Name = "getGenre")]
+        public async Task<ActionResult<Genre>> Get(int Id)
         {
-            var genre = _repository.GetGenreById(Id);
+            var genre = await _context.Genres.FirstOrDefaultAsync(x => x.Id == Id);
 
-            if(genre == null)
+            if (genre == null)
             {
                 return NotFound();
             }
@@ -47,10 +45,13 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult Post([FromBody] Genre genre)
+        public async Task<ActionResult> Post([FromBody] Genre genre)
         {
-            _repository.AddGenre(genre);
-            return new CreatedAtRouteResult("getGenre", new { Id = genre .Id}, genre);
+            _context.Genres.Add(genre);
+            //_context.Add(genre);
+            await _context.SaveChangesAsync();
+
+            return new CreatedAtRouteResult("getGenre", new { Id = genre.Id }, genre);
         }
     }
 }
