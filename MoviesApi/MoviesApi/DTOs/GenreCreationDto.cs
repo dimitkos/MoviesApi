@@ -1,11 +1,10 @@
 ﻿using MoviesApi.Validations;
 using System.ComponentModel.DataAnnotations;
 
-namespace MoviesApi.Entities
+namespace MoviesApi.DTOs
 {
-    public class Genre
+    public class GenreCreationDto
     {
-        public int Id { get; set; }
         [Required]
         [StringLength(40)]
         [FirtsLetterUppercase]
