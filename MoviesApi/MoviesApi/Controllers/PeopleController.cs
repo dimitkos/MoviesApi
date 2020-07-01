@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.DTOs;
 using MoviesApi.Entities;
+using MoviesApi.Helpers;
 using MoviesApi.Services;
 using System.Collections.Generic;
 using System.IO;
@@ -28,9 +29,12 @@ namespace MoviesApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<PersonDto>>> Get()
+        public async Task<ActionResult<List<PersonDto>>> Get([FromQuery] PaginationDto pagination)
         {
-            var people = await _context.People.AsNoTracking().ToListAsync();
+            var queryable = _context.People.AsQueryable();
+            await HttpContext.InsertPaginationParametersInResponse(queryable, pagination.RecordsPerPage);
+
+            var people = await queryable.Paginate(pagination).ToListAsync();
 
             var peopleDto = _mapper.Map<List<PersonDto>>(people);
 
@@ -112,7 +116,7 @@ namespace MoviesApi.Controllers
         [HttpPatch("{id}")]
         public async Task<ActionResult> Patch(int id, [FromBody] JsonPatchDocument<PersonPatchDto> jsonPatchDocument)
         {
-            if(jsonPatchDocument == null)
+            if (jsonPatchDocument == null)
             {
                 return BadRequest();
             }
@@ -137,7 +141,7 @@ namespace MoviesApi.Controllers
                 return BadRequest(ModelState);
             }
 
-           _mapper.Map(entityDTO, entityFromDb);
+            _mapper.Map(entityDTO, entityFromDb);
 
             await _context.SaveChangesAsync();
 
