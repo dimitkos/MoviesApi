@@ -12,5 +12,7 @@ namespace MoviesApi
         public DbSet<Genre> Genres { get; set; }
 
         public DbSet<Person> People { get; set; }
+
+        public DbSet<Movie> Movies { get; set; }
     }
 }
