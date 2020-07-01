@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.DTOs;
@@ -70,7 +71,7 @@ namespace MoviesApi.Controllers
             }
 
             _context.People.Add(person);
-            //_context.Add(genre);
+            //_context.Add(person);
             await _context.SaveChangesAsync();
 
             var personDto = _mapper.Map<PersonDto>(person);
@@ -105,6 +106,41 @@ namespace MoviesApi.Controllers
             }
 
             await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult> Patch(int id, [FromBody] JsonPatchDocument<PersonPatchDto> jsonPatchDocument)
+        {
+            if(jsonPatchDocument == null)
+            {
+                return BadRequest();
+            }
+
+            var entityFromDb = await _context.People.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (entityFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var entityDTO = _mapper.Map<PersonPatchDto>(entityFromDb);
+
+            //apply our changes to entity dto
+            jsonPatchDocument.ApplyTo(entityDTO, ModelState);
+
+            //validating all the business rules
+            var isValid = TryValidateModel(entityDTO);
+
+            if (!isValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+           _mapper.Map(entityDTO, entityFromDb);
+
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 

@@ -41,7 +41,8 @@ namespace MoviesApi
             services.AddControllers(options => 
             {
                 options.Filters.Add(typeof(ExceptionFilter)); //apply global a filter
-            }).AddXmlDataContractSerializerFormatters();
+            }).AddNewtonsoftJson()
+              .AddXmlDataContractSerializerFormatters();
             //services.AddResponseCaching();
             services.AddTransient<LoggingActionFilter>();
             //services.AddTransient<IHostedService, WriteToFileHostedService>();
