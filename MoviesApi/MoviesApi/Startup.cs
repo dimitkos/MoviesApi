@@ -31,6 +31,13 @@ namespace MoviesApi
 
             services.AddAutoMapper(typeof(Startup));
 
+            //it is when i use azure storage
+            //services.AddTransient<IFileStorageService, AzureStorageService>();
+
+            //if i use wwwroot to save the pictures
+            services.AddTransient<IFileStorageService, InAppStorageService>();
+            services.AddHttpContextAccessor();
+
             services.AddControllers(options => 
             {
                 options.Filters.Add(typeof(ExceptionFilter)); //apply global a filter
@@ -71,6 +78,9 @@ namespace MoviesApi
             }
 
             app.UseHttpsRedirection();
+
+            //if i use wwwroot to store pictures
+            app.UseStaticFiles();
 
             app.UseRouting();
 
