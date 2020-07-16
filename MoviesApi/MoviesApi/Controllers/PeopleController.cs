@@ -93,7 +93,7 @@ namespace MoviesApi.Controllers
                 return NotFound();
             }
 
-            var personDB = _mapper.Map(personCreation, personDb);
+            personDb = _mapper.Map(personCreation, personDb);
 
             if (personCreation.Picture != null)
             {
@@ -102,9 +102,9 @@ namespace MoviesApi.Controllers
                     await personCreation.Picture.CopyToAsync(memoryStream);
                     var content = memoryStream.ToArray();
                     var extension = Path.GetExtension(personCreation.Picture.FileName);
-                    personDB.Picture =
+                    personDb.Picture =
                         await _fileStorageService.EditFile(content, extension, containerName,
-                                                            personDB.Picture,
+                                                            personDb.Picture,
                                                             personCreation.Picture.ContentType);
                 }
             }
