@@ -70,6 +70,8 @@ namespace MoviesApi.Controllers
                 }
             }
 
+            AnnotateActorsOrder(movie);
+
             _context.Add(movie);
 
             await _context.SaveChangesAsync();
@@ -103,6 +105,10 @@ namespace MoviesApi.Controllers
                                                             movieCreation.Poster.ContentType);
                 }
             }
+
+            await _context.Database.ExecuteSqlInterpolatedAsync($"delete from MoviesActors where MovieId = {movie.Id}; delete from MoviesGenres where MovieId = {movie.Id}");
+            
+            AnnotateActorsOrder(movie);
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -156,6 +162,17 @@ namespace MoviesApi.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private static void AnnotateActorsOrder(Movie movie)
+        {
+            if(movie.MoviesActors != null)
+            {
+                for (int i = 0; i < movie.MoviesActors.Count; i++)
+                {
+                    movie.MoviesActors[i].Order = i;
+                }
+            }
         }
     }
 }
