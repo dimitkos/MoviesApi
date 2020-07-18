@@ -1,4 +1,5 @@
 ﻿using MoviesApi.Validations;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MoviesApi.Entities
@@ -10,5 +11,6 @@ namespace MoviesApi.Entities
         [StringLength(40)]
         [FirtsLetterUppercase]
         public string Name { get; set; }
+        public List<MoviesGenres> MoviesGenres { get; set; }
     }
 }
