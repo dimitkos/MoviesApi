@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.DTOs;
 using MoviesApi.Entities;
+using MoviesApi.Helpers;
 using MoviesApi.Services;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MoviesApi.Controllers
@@ -28,9 +31,55 @@ namespace MoviesApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<MovieDto>>> Get()
+        public async Task<ActionResult<IndexMoviePageDto>> Get()
         {
-            var movies = await _context.Movies.AsNoTracking().ToListAsync();
+            var top = 6;
+            var today = DateTime.Today;
+
+            var upcomingRealeases = await _context.Movies
+                .Where(x => x.ReleaseDate > today)
+                .OrderBy(x => x.ReleaseDate)
+                .Take(top)
+                .ToListAsync();
+
+            var inTheaters = await _context.Movies
+                .Where(x => x.InTheaters)
+                .Take(top)
+                .ToListAsync();
+
+            var result = new IndexMoviePageDto
+            {
+                UpcomingRealeases = _mapper.Map<List<MovieDto>>(upcomingRealeases),
+                InTheaters = _mapper.Map<List<MovieDto>>(inTheaters)
+            };
+
+            return Ok(result);
+        }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<List<MovieDto>>> Filter([FromQuery] FilterMoviesDto filterMoviesDto)
+        {
+            var moviesQueryable = _context.Movies.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filterMoviesDto.Title))
+                moviesQueryable = moviesQueryable.Where(x => x.Title.Contains(filterMoviesDto.Title));
+
+            if (filterMoviesDto.InTheaters)
+                moviesQueryable = moviesQueryable.Where(x => x.InTheaters);
+
+            if (filterMoviesDto.UpcomingReleases)
+            {
+                var today = DateTime.Today;
+                moviesQueryable = moviesQueryable.Where(x => x.ReleaseDate > today);
+            }
+
+            if (filterMoviesDto.GenreId != 0)
+                moviesQueryable = moviesQueryable.Where(x => x.MoviesGenres.Select(y => y.GenreId).Contains(filterMoviesDto.GenreId));
+
+            //use pagination logic after the filter logic
+            await HttpContext.InsertPaginationParametersInResponse(moviesQueryable, filterMoviesDto.RecordsPerPage);
+
+            var movies = await moviesQueryable.Paginate(filterMoviesDto.Pagination).ToListAsync();
 
             var moviesDto = _mapper.Map<List<MovieDto>>(movies);
 
@@ -42,7 +91,7 @@ namespace MoviesApi.Controllers
         {
             var movie = await _context.Movies.FirstOrDefaultAsync(x => x.Id == id);
 
-            if(movie == null)
+            if (movie == null)
             {
                 return NotFound();
             }
@@ -53,7 +102,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm]MovieCreationDto movieCreation)
+        public async Task<ActionResult> Post([FromForm] MovieCreationDto movieCreation)
         {
             var movie = _mapper.Map<Movie>(movieCreation);
 
@@ -107,7 +156,7 @@ namespace MoviesApi.Controllers
             }
 
             await _context.Database.ExecuteSqlInterpolatedAsync($"delete from MoviesActors where MovieId = {movie.Id}; delete from MoviesGenres where MovieId = {movie.Id}");
-            
+
             AnnotateActorsOrder(movie);
 
             await _context.SaveChangesAsync();
@@ -166,7 +215,7 @@ namespace MoviesApi.Controllers
 
         private static void AnnotateActorsOrder(Movie movie)
         {
-            if(movie.MoviesActors != null)
+            if (movie.MoviesActors != null)
             {
                 for (int i = 0; i < movie.MoviesActors.Count; i++)
                 {
