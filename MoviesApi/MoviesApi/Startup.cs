@@ -46,6 +46,7 @@ namespace MoviesApi
             //services.AddResponseCaching();
             services.AddTransient<LoggingActionFilter>();
             //services.AddTransient<IHostedService, WriteToFileHostedService>();
+            services.AddTransient<IHostedService, MovieInTheaterService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
