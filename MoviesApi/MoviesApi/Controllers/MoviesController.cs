@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq.Dynamic.Core;
+using Microsoft.Extensions.Logging;
 
 namespace MoviesApi.Controllers
 {
@@ -21,13 +23,18 @@ namespace MoviesApi.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IFileStorageService _fileStorageService;
+        private readonly ILogger<MoviesController> _logger;
         private readonly string containerName = "movies";
 
-        public MoviesController(ApplicationDbContext context, IMapper mapper, IFileStorageService fileStorageService)
+        public MoviesController(ApplicationDbContext context,
+            IMapper mapper,
+            IFileStorageService fileStorageService,
+            ILogger<MoviesController> logger)
         {
             _context = context;
             _mapper = mapper;
             _fileStorageService = fileStorageService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -75,6 +82,19 @@ namespace MoviesApi.Controllers
 
             if (filterMoviesDto.GenreId != 0)
                 moviesQueryable = moviesQueryable.Where(x => x.MoviesGenres.Select(y => y.GenreId).Contains(filterMoviesDto.GenreId));
+
+            if (!string.IsNullOrWhiteSpace(filterMoviesDto.OrderingField))
+            {
+                try
+                {
+                    moviesQueryable = moviesQueryable
+                        .OrderBy($"{filterMoviesDto.OrderingField} {(filterMoviesDto.AscendingOrder ? "ascending" : "descending")}");
+                }
+                catch
+                {
+                    _logger.LogWarning("Could not order by field: " + filterMoviesDto.OrderingField);
+                }
+            }
 
             //use pagination logic after the filter logic
             await HttpContext.InsertPaginationParametersInResponse(moviesQueryable, filterMoviesDto.RecordsPerPage);
