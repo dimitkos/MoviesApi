@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -61,6 +63,18 @@ namespace MoviesApi.Controllers
             }
         }
 
+        [HttpPost("refreshToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public ActionResult<UserToken> RefreshToken([FromBody] UserInfo model)
+        {
+            var userInfo = new UserInfo
+            {
+                EmailAddress = HttpContext.User.Identity.Name
+            };
+
+            return BuildToken(userInfo);
+        }
+
         private UserToken BuildToken(UserInfo userInfo)
         {
             var claims = new List<Claim>
@@ -72,7 +86,7 @@ namespace MoviesApi.Controllers
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var expiration = DateTime.UtcNow.AddYears(1);
+            var expiration = DateTime.UtcNow.AddMinutes(1);
 
             JwtSecurityToken token = new JwtSecurityToken(
                 issuer: null,
