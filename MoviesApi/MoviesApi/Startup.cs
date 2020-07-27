@@ -31,7 +31,8 @@ namespace MoviesApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
+            sqlserver => sqlserver.UseNetTopologySuite()));
 
             services.AddCors();
             services.AddDataProtection();
@@ -76,9 +77,9 @@ namespace MoviesApi
 
             services.AddSwaggerGen(config =>
             {
-                config.SwaggerDoc("v1", new OpenApiInfo 
-                { 
-                    Version = "v1", 
+                config.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
                     Title = "MoviesAPI",
                     Description = "This is a Web API for Movies operations",
                     TermsOfService = new Uri("https://udemy.com/user/felipegaviln/"),

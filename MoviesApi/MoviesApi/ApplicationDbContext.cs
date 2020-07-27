@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.Entities;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 
@@ -24,6 +26,18 @@ namespace MoviesApi
 
         private void SeedData(ModelBuilder modelBuilder)
         {
+            var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+
+            modelBuilder.Entity<MovieTheater>()
+                .HasData(new List<MovieTheater>
+                {
+                    new MovieTheater{Id = 1, Name = "Agora", Location = geometryFactory.CreatePoint(new Coordinate(-69.9388777, 18.4839233))},
+                    new MovieTheater{Id = 2, Name = "Sambil", Location = geometryFactory.CreatePoint(new Coordinate(-69.9118804, 18.4826214))},
+                    new MovieTheater{Id = 3, Name = "Megacentro", Location = geometryFactory.CreatePoint(new Coordinate(-69.856427, 18.506934))},
+                    new MovieTheater{Id = 4, Name = "Village East Cinema", Location = geometryFactory.CreatePoint(new Coordinate(-73.986227, 40.730898))}
+                });
+
+
             var adventure = new Genre() { Id = 4, Name = "Adventure" };
             var animation = new Genre() { Id = 5, Name = "Animation" };
             var drama = new Genre() { Id = 6, Name = "Drama" };
@@ -119,5 +133,6 @@ namespace MoviesApi
         public DbSet<Movie> Movies { get; set; }
         public DbSet<MoviesGenres> MoviesGenres { get; set; }
         public DbSet<MoviesActors> MoviesActors { get; set; }
+        public DbSet<MovieTheater> MovieTheaters { get; set; }
     }
 }
