@@ -44,6 +44,8 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost("Create")]
+        [ProducesResponseType(typeof(UserToken), 200)]
+        [ProducesResponseType(400)]
         public async Task<ActionResult<UserToken>> CreateUser([FromBody] UserInfo model)
         {
             var user = new IdentityUser { UserName = model.EmailAddress, Email = model.EmailAddress };

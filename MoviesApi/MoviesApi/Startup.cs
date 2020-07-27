@@ -12,6 +12,8 @@ using Microsoft.OpenApi.Models;
 using MoviesApi.Filters;
 using MoviesApi.Services;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Text;
 
 namespace MoviesApi
@@ -91,6 +93,10 @@ namespace MoviesApi
                         Url = new Uri("https://gavilan.blog/")
                     }
                 });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                config.IncludeXmlComments(xmlPath);
             });
         }
 
