@@ -31,6 +31,7 @@ namespace MoviesApi
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddCors();
+            services.AddDataProtection();
 
             services.AddAutoMapper(typeof(Startup));
 
