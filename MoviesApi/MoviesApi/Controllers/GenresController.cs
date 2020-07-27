@@ -32,7 +32,7 @@ namespace MoviesApi.Controllers
         /// Get all genres
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
+        [HttpGet(Name = "getGenres")]
         [ServiceFilter(typeof(LoggingActionFilter))]
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         //[ResponseCache(Duration = 60)]
