@@ -30,6 +30,8 @@ namespace MoviesApi
             services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddCors();
+
             services.AddAutoMapper(typeof(Startup));
 
             //it is when i use azure storage
@@ -109,6 +111,12 @@ namespace MoviesApi
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            //this origin allows to use my api
+            app.UseCors(builder =>
+             builder.WithOrigins("http://apirequest.io")
+                    .WithMethods("GET", "POST")
+                    .AllowAnyHeader());
 
             app.UseEndpoints(endpoints =>
             {
