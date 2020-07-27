@@ -1,13 +1,18 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MoviesApi.DTOs;
+using MoviesApi.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,15 +26,21 @@ namespace MoviesApi.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
         public AccountsController(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ApplicationDbContext context,
+            IMapper autoMapper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _context = context;
+            _mapper = autoMapper;
         }
 
         [HttpPost("Create")]
@@ -40,7 +51,7 @@ namespace MoviesApi.Controllers
 
             if (result.Succeeded)
             {
-                return BuildToken(model);
+                return await BuildToken(model);
             }
             else
             {
@@ -55,7 +66,7 @@ namespace MoviesApi.Controllers
 
             if (result.Succeeded)
             {
-                return BuildToken(model);
+                return await BuildToken(model);
             }
             else
             {
@@ -65,23 +76,93 @@ namespace MoviesApi.Controllers
 
         [HttpPost("refreshToken")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public ActionResult<UserToken> RefreshToken([FromBody] UserInfo model)
+        public async Task<ActionResult<UserToken>> RefreshToken([FromBody] UserInfo model)
         {
             var userInfo = new UserInfo
             {
                 EmailAddress = HttpContext.User.Identity.Name
             };
 
-            return BuildToken(userInfo);
+            return await BuildToken(userInfo);
         }
 
-        private UserToken BuildToken(UserInfo userInfo)
+        [HttpGet("users")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        public async Task<ActionResult<List<UserDto>>> GetUsers([FromQuery] PaginationDto paginationDto)
+        {
+            var usersQueryable = _context.Users.AsQueryable();
+            usersQueryable = usersQueryable.OrderBy(x => x.Email);
+
+            await HttpContext.InsertPaginationParametersInResponse(usersQueryable, paginationDto.RecordsPerPage);
+
+            var users = await usersQueryable.Paginate(paginationDto).ToListAsync();
+
+            var usersDto = _mapper.Map<List<UserDto>>(users);
+
+            return Ok(usersDto);
+        }
+
+        [HttpGet("roles")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        public async Task<ActionResult<List<string>>> GetRoles()
+        {
+            var roles = await _context.Roles
+                .Select(x => x.Name)
+                .ToListAsync();
+
+            return Ok(roles);
+        }
+
+        [HttpPost("assignRole")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        public async Task<ActionResult> AssignRole(EditRoleDto editRoleDto)
+        {
+            var user = await _userManager.FindByIdAsync(editRoleDto.UserId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, editRoleDto.RoleName));
+
+            //another way is to use 
+            //await _userManager.AddToRoleAsync(user, editRoleDto.RoleName);
+
+            return NoContent();
+        }
+
+        [HttpPost("removeRole")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        public async Task<ActionResult> RemoveRole(EditRoleDto editRoleDto)
+        {
+            var user = await _userManager.FindByIdAsync(editRoleDto.UserId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await _userManager.RemoveClaimAsync(user, new Claim(ClaimTypes.Role, editRoleDto.RoleName));
+
+            //another way is to use 
+            //await _userManager.RemoveFromRoleAsync(user, editRoleDto.RoleName);
+
+            return NoContent();
+        }
+
+        private async Task<UserToken> BuildToken(UserInfo userInfo)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name,userInfo.EmailAddress),
                 new Claim(ClaimTypes.Email,userInfo.EmailAddress)
             };
+
+            var identityUser = await _userManager.FindByEmailAsync(userInfo.EmailAddress);
+            var claimsDb = await _userManager.GetClaimsAsync(identityUser);
+
+            claims.AddRange(claimsDb);
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

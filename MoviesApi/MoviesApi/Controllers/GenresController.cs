@@ -56,6 +56,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<ActionResult> Post([FromBody] GenreCreationDto genreCreation)
         {
             var genre = _mapper.Map<Genre>(genreCreation);
@@ -70,6 +71,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<ActionResult> Put(int id, [FromBody] GenreCreationDto genreCreation)
         {
             var genre = _mapper.Map<Genre>(genreCreation);
@@ -85,16 +87,17 @@ namespace MoviesApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             var exists = await _context.Genres.AnyAsync(x => x.Id == id);
 
-            if(!exists)
+            if (!exists)
             {
                 return NotFound();
             }
 
-            _context.Genres.Remove(new Genre { Id = id});
+            _context.Genres.Remove(new Genre { Id = id });
 
             await _context.SaveChangesAsync();
 
