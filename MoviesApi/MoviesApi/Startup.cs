@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MoviesApi.Filters;
 using MoviesApi.Services;
 using System;
@@ -70,6 +71,27 @@ namespace MoviesApi
             services.AddTransient<LoggingActionFilter>();
             //services.AddTransient<IHostedService, WriteToFileHostedService>();
             services.AddTransient<IHostedService, MovieInTheaterService>();
+
+            services.AddSwaggerGen(config =>
+            {
+                config.SwaggerDoc("v1", new OpenApiInfo 
+                { 
+                    Version = "v1", 
+                    Title = "MoviesAPI",
+                    Description = "This is a Web API for Movies operations",
+                    TermsOfService = new Uri("https://udemy.com/user/felipegaviln/"),
+                    License = new OpenApiLicense()
+                    {
+                        Name = "MIT"
+                    },
+                    Contact = new OpenApiContact()
+                    {
+                        Name = "Felipe Gavilán",
+                        Email = "felipe_gavilan887@hotmail.com",
+                        Url = new Uri("https://gavilan.blog/")
+                    }
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,6 +118,12 @@ namespace MoviesApi
             //    }
             //});
 
+            app.UseSwagger();
+
+            app.UseSwaggerUI(config =>
+            {
+                config.SwaggerEndpoint("/swagger/v1/swagger.json", "MoviesAPI");
+            });
 
             if (env.IsDevelopment())
             {
