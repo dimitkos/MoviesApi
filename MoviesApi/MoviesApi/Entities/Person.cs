@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MoviesApi.Entities
 {
-    public class Person
+    public class Person : IId
     {
         public int Id { get; set; }
 
