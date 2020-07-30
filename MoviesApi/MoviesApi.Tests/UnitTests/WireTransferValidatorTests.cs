@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MoviesApi.Testing;
 
-namespace MoviesApi.Tests
+namespace MoviesApi.Tests.UnitTests
 {
     [TestClass]
     public class WireTransferValidatorTests

@@ -3,7 +3,7 @@ using Moq;
 using MoviesApi.Testing;
 using System;
 
-namespace MoviesApi.Tests
+namespace MoviesApi.Tests.UnitTests
 {
     [TestClass]
     public class TransferServiceTest
