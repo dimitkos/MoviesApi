@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace MoviesApi.Testing
+﻿namespace MoviesApi.Testing
 {
     public class WireTransferValidator : IValidateWireTransfer
     {

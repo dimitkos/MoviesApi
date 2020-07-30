@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using MoviesApi.Testing;
 using System;
 
@@ -23,7 +24,10 @@ namespace MoviesApi.Tests
 
             decimal amountToTransfer = 5m;
 
-            var service = new TransferService(new WireTransferValidator());
+            var mockValidateWireTransfer = new Mock<IValidateWireTransfer>();
+            mockValidateWireTransfer.Setup(x => x.Validate(origin, destination, amountToTransfer)).Returns(new OperationResult(false, "error message"));
+
+            var service = new TransferService(mockValidateWireTransfer.Object);
             Exception expectedException = null;
 
             //Testing
@@ -45,7 +49,7 @@ namespace MoviesApi.Tests
             }
 
             Assert.IsTrue(expectedException is ApplicationException);
-            Assert.AreEqual("The origin account does not have enoigh funds available", expectedException.Message);
+            Assert.AreEqual("error message", expectedException.Message);
         }
 
         [TestMethod]
@@ -64,7 +68,9 @@ namespace MoviesApi.Tests
 
             decimal amountToTransfer = 7m;
 
-            var service = new TransferService(new WireTransferValidator());
+            var mockValidateWireTransfer = new Mock<IValidateWireTransfer>();
+            mockValidateWireTransfer.Setup(x => x.Validate(origin, destination, amountToTransfer)).Returns(new OperationResult(true));
+            var service = new TransferService(mockValidateWireTransfer.Object);
 
             //Testing
 
