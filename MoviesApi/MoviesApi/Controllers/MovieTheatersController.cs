@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.DTOs;
 using NetTopologySuite;
@@ -15,12 +14,10 @@ namespace MoviesApi.Controllers
     [Route("api/movietheaters")]
     public class MovieTheatersController : ControllerBase
     {
-        private readonly IMapper _mapper;
         private readonly ApplicationDbContext _context;
 
-        public MovieTheatersController(IMapper mapper, ApplicationDbContext applicationDbContext)
+        public MovieTheatersController(ApplicationDbContext applicationDbContext)
         {
-            _mapper = mapper;
             _context = applicationDbContext;
         }
 
