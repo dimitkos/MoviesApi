@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MoviesApi.Filters;
+using MoviesApi.Helpers;
 using MoviesApi.Services;
 using System;
 using System.IO;
@@ -30,6 +32,9 @@ namespace MoviesApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks()
+                .AddDbContextCheck<ApplicationDbContext>(tags: new[] { "ready" }); //only checks for readiness
+
             services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
             sqlserver => sqlserver.UseNetTopologySuite()));
@@ -155,6 +160,21 @@ namespace MoviesApi
              builder.WithOrigins("http://apirequest.io")
                     .WithMethods("GET", "POST")
                     .AllowAnyHeader());
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+                {
+                    ResponseWriter = HealthCheckResponseWriter.WriteResponseReadiness,
+                    Predicate = (check) => check.Tags.Contains("ready")
+                });
+
+                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+                {
+                    ResponseWriter = HealthCheckResponseWriter.WriteResponseLiveness,
+                    Predicate = (check) => !check.Tags.Contains("ready")
+                });
+            });
 
             app.UseEndpoints(endpoints =>
             {
