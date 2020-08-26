@@ -9,6 +9,10 @@ namespace MoviesApi.Controllers.V2
     [Route("api")]
     public class RootController : ControllerBase
     {
+        /// <summary>
+        /// get roots
+        /// </summary>
+        /// <returns>A list of links</returns>
         [HttpGet(Name = "getRoot")]
         [HttpHeaderIsPresent("x-version", "2")]
         public ActionResult<IEnumerable<Link>> Get()
